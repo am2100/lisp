@@ -1,3 +1,9 @@
+*.fas
+*.FAS
 *.FASL
 *.fasl
+*.lib
 *.lisp-temp
+*.un
+*.*~
+*.*#
