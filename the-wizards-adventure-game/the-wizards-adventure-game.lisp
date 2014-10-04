@@ -1,4 +1,3 @@
-;; This is an association list
 (defparameter *nodes* '((living-room (you are in the living-room. a wizard is snoring loudly on the couch.))
                         (garden      (you are in a beautiful garden.))
                         (attic       (you are in the attic. there is a giant welding torch in the corner.))))
@@ -43,4 +42,13 @@
 		    (look))
       '(you cannot go that way.))))
 
+(defun pickup (object)
+  (cond ((member object (objects-at *location* *objects* *object-locations*))
+	 (push (list object 'body) *object-locations*)
+	 `(you are now carrying the ,object))
+	(t '(you cannot get that.))))
+
+(defun inventory ()
+  "Returns a list of objects currently being carried on the body."
+  (cons 'items- (objects-at 'body *objects* *object-locations*)))
 ;; (defun at-loc-p-2 (obj obj-locs loc) (eq (cadr (assoc obj obj-locs)) loc))
