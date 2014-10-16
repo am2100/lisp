@@ -1,3 +1,10 @@
+;; Documentation strings
+;;
+;; what the function does, 
+;; what the arguments mean, 
+;; what values are returned, 
+;; what conditions the function can signal.
+
 (defparameter *nodes* '((living-room (you are in the living-room. a wizard is snoring loudly on the couch.))
                         (garden      (you are in a beautiful garden.))
                         (attic       (you are in the attic. there is a giant welding torch in the corner.))))
@@ -51,4 +58,50 @@
 (defun inventory ()
   "Returns a list of objects currently being carried on the body."
   (cons 'items- (objects-at 'body *objects* *object-locations*)))
-;; (defun at-loc-p-2 (obj obj-locs loc) (eq (cadr (assoc obj obj-locs)) loc))
+
+;; REPL
+
+(defparameter *allowed-commands* '(look walk pickup inventory))
+
+(defun game-repl ()
+  "A custom REPL allowing for better text input and output."
+  (let ((cmd (game-read)))
+    (unless (eq (car cmd) 'quit)
+      (game-print (game-eval cmd))
+      (game-repl))))
+
+(defun game-read ()
+  "Allows command input without requiring the user to use parens or quotes"
+  (let ((cmd (read-from-string (concatenate 'string "(" (read-line) ")" ))))
+    (flet ((quote-it (x)
+      "Returns a two item list where the car is the word 'quote' and the
+      cdr is the value of x"
+      (list 'quote x)))
+      (cons (car cmd) (mapcar #'quote-it  (cdr cmd))))))
+
+(defun game-eval (sexp)
+  "Allows only safe game commands to be evaluated"
+  (if (member (car sexp) *allowed-commands*)
+    (eval sexp)
+    '(I do not know that command.)))
+
+(defun tweak-text (lst caps lit)
+  (when lst
+    (let ((item (car lst))
+	  (rest (cdr lst)))
+      (cond ((eql item #\space)           (cons item (tweak-text rest caps lit)))
+	    ((member item '(#\! #\? #\.)) (cons item (tweak-text rest t lit)))
+	    ((eql item #\")               (tweak-text rest caps (not lit)))
+	    (lit                          (cons item (tweak-text rest nil lit)))
+	    (caps                         (cons (char-upcase item) (tweak-text rest nil lit)))
+	    (t                            (cons (char-downcase item) (tweak-text rest nil nil)))))))
+
+(defun game-print (lst)
+  (princ (coerce (tweak-text (coerce (string-trim "() " 
+						  (prin1-to-string lst))
+				     'list)
+			     t
+			     nil)
+		 'string))
+  (fresh-line))
+
